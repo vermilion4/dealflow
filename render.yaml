@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: dealflow-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: AIRIA_API_KEY
+        sync: false
+      - key: AIRIA_PROJECT_ID
+        sync: false
+      - key: PROSPECT_SCOUT_PIPELINE_ID
+        sync: false
+      - key: FIT_ANALYZER_PIPELINE_ID
+        sync: false
+      - key: PITCH_CRAFT_PIPELINE_ID
+        sync: false
+      - key: OUTREACH_PILOT_PIPELINE_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./dealflow.db

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./dealflow.db"
     FRONTEND_URL: str = "http://localhost:3000"
+    PORT: int = 8000
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

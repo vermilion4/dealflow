@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+backend/venv/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Next.js
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Seed output
+backend/setup/seed_output/

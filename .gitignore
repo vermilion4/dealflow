@@ -27,3 +27,4 @@ out/
 
 # Seed output
 backend/setup/seed_output/
+.claude/

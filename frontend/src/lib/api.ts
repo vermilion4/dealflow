@@ -49,9 +49,13 @@ export async function getDraft(id: number): Promise<OutreachDraft> {
   return fetchAPI<OutreachDraft>(`/approvals/${id}`)
 }
 
+export async function getConfig(): Promise<{ sender_email: string }> {
+  return fetchAPI<{ sender_email: string }>("/config")
+}
+
 export async function approveDraft(
   id: number,
-  edits?: { subject_line?: string; email_body?: string; recipient_email?: string; comment?: string }
+  edits?: { subject_line?: string; email_body?: string; sender_email?: string; recipient_email?: string; comment?: string }
 ): Promise<OutreachDraft> {
   return fetchAPI<OutreachDraft>(`/approvals/${id}/approve`, {
     method: "POST",

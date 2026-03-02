@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { EmptyState } from "@/components/ui/empty-state"
 import { FitScoreBadge } from "@/components/deals/fit-score-badge"
 import type { Prospect, Deal, ResearchData } from "@/lib/types"
 
@@ -127,9 +129,11 @@ export function ProspectTable({ prospects, deals = [] }: ProspectTableProps) {
 
   if (prospects.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        No prospects yet. Click &quot;New Research&quot; to get started.
-      </div>
+      <EmptyState
+        icon={<Search className="w-7 h-7 text-muted-foreground" />}
+        title="No prospects yet"
+        description="Start by researching a company. Click &quot;New Research&quot; above to begin prospecting."
+      />
     )
   }
 

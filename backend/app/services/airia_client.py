@@ -17,7 +17,7 @@ class AiriaClient:
         user_input: str,
     ) -> dict:
         """Execute an Airia pipeline and return the parsed result."""
-        url = f"{self.base_url}/v1/PipelineExecution/{pipeline_id}"
+        url = f"{self.base_url}/v2/PipelineExecution/{pipeline_id}"
 
         payload = {
             "userInput": user_input,

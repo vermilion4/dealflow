@@ -2,14 +2,17 @@
 
 import { useState, useCallback } from "react"
 import useSWR from "swr"
+import { FileCheck } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
+import { useToast } from "@/components/ui/toast"
 import { FitScoreBadge } from "@/components/deals/fit-score-badge"
 import { DraftEditor } from "@/components/approvals/draft-editor"
 import { ApprovalActions } from "@/components/approvals/approval-actions"
-import { listPendingApprovals, approveDraft, rejectDraft } from "@/lib/api"
+import { listPendingApprovals, approveDraft, rejectDraft, getConfig } from "@/lib/api"
 import { useSSE } from "@/lib/sse"
 import type { OutreachDraft } from "@/lib/types"
 
@@ -19,6 +22,9 @@ export default function ApprovalsPage() {
     listPendingApprovals,
     { refreshInterval: 5000 }
   )
+  const { data: config } = useSWR("config", getConfig)
+
+  const { toast } = useToast()
 
   const handleSSE = useCallback(() => {
     mutate()
@@ -29,6 +35,7 @@ export default function ApprovalsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [editedSubject, setEditedSubject] = useState("")
   const [editedBody, setEditedBody] = useState("")
+  const [senderEmail, setSenderEmail] = useState("")
   const [recipientEmail, setRecipientEmail] = useState("")
 
   function handleExpand(draft: OutreachDraft) {
@@ -39,23 +46,46 @@ export default function ApprovalsPage() {
     setExpandedId(draft.id)
     setEditedSubject(draft.subject_line || "")
     setEditedBody(draft.email_body || "")
+    setSenderEmail(config?.sender_email || "")
     setRecipientEmail("")
   }
 
-  async function handleApprove(draftId: number) {
-    await approveDraft(draftId, {
-      subject_line: editedSubject,
-      email_body: editedBody,
-      recipient_email: recipientEmail || undefined,
-    })
-    mutate()
-    setExpandedId(null)
+  async function handleApprove(draftId: number, companyName: string) {
+    try {
+      await approveDraft(draftId, {
+        subject_line: editedSubject,
+        email_body: editedBody,
+        sender_email: senderEmail || undefined,
+        recipient_email: recipientEmail || undefined,
+      })
+      mutate()
+      setExpandedId(null)
+    } catch {
+      toast({
+        title: "Approval failed",
+        description: "Something went wrong. Please try again.",
+        variant: "error",
+      })
+    }
   }
 
-  async function handleReject(draftId: number) {
-    await rejectDraft(draftId)
-    mutate()
-    setExpandedId(null)
+  async function handleReject(draftId: number, companyName: string) {
+    try {
+      await rejectDraft(draftId)
+      toast({
+        title: "Draft rejected",
+        description: `Outreach for ${companyName} has been rejected.`,
+        variant: "success",
+      })
+      mutate()
+      setExpandedId(null)
+    } catch {
+      toast({
+        title: "Rejection failed",
+        description: "Something went wrong. Please try again.",
+        variant: "error",
+      })
+    }
   }
 
   return (
@@ -74,14 +104,16 @@ export default function ApprovalsPage() {
           ))}
         </div>
       ) : !drafts || drafts.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          No pending approvals. Drafts will appear here after the pipeline runs.
-        </div>
+        <EmptyState
+          icon={<FileCheck className="w-7 h-7 text-muted-foreground" />}
+          title="No pending approvals"
+          description="Outreach drafts will appear here for your review once the AI pipeline generates them."
+        />
       ) : (
         <div className="space-y-4">
           {drafts.map((draft) => (
             <Card key={draft.id} className="cursor-pointer" onClick={() => handleExpand(draft)}>
-              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0 hover:bg-accent transition-colors duration-300">
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base">
                     {draft.deal?.prospect?.company_name || `Draft #${draft.id}`}
@@ -115,18 +147,32 @@ export default function ApprovalsPage() {
 
               {expandedId === draft.id && (
                 <CardContent className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                  {/* Recipient email */}
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Recipient Email</label>
-                    <Input
-                      type="email"
-                      placeholder="e.g. contact@company.com"
-                      value={recipientEmail}
-                      onChange={(e) => setRecipientEmail(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Email address to send the outreach to. Leave blank to skip sending.
-                    </p>
+                  {/* Email addresses */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">From (Sender)</label>
+                      <Input
+                        type="email"
+                        placeholder="e.g. you@gmail.com"
+                        value={senderEmail}
+                        onChange={(e) => setSenderEmail(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Gmail address to send from.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">To (Recipient)</label>
+                      <Input
+                        type="email"
+                        placeholder="e.g. contact@company.com"
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Email address to send the outreach to.
+                      </p>
+                    </div>
                   </div>
 
                   <DraftEditor
@@ -170,8 +216,10 @@ export default function ApprovalsPage() {
                   )}
 
                   <ApprovalActions
-                    onApprove={() => handleApprove(draft.id)}
-                    onReject={() => handleReject(draft.id)}
+                    onApprove={() => handleApprove(draft.id, draft.deal?.prospect?.company_name || `Draft #${draft.id}`)}
+                    onReject={() => handleReject(draft.id, draft.deal?.prospect?.company_name || `Draft #${draft.id}`)}
+                    companyName={draft.deal?.prospect?.company_name}
+                    requiresEmail={!recipientEmail.trim()}
                   />
                 </CardContent>
               )}

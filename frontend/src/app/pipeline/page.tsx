@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from "react"
 import useSWR from "swr"
+import { Workflow } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 import { RunTimeline } from "@/components/pipeline/run-timeline"
 import { listPipelineRuns } from "@/lib/api"
 import { useSSE } from "@/lib/sse"
@@ -48,9 +50,11 @@ export default function PipelinePage() {
           ))}
         </div>
       ) : !runs || runs.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          No pipeline runs yet. Start by researching a prospect.
-        </div>
+        <EmptyState
+          icon={<Workflow className="w-7 h-7 text-muted-foreground" />}
+          title="No pipeline runs yet"
+          description="Pipeline activity will show up here in real-time as agents process your prospects."
+        />
       ) : (
         <div className="space-y-4">
           {runs.map((run) => (

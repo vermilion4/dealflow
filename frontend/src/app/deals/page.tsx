@@ -2,7 +2,9 @@
 
 import { useCallback } from "react"
 import useSWR from "swr"
+import { BarChart3 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 import { DealCard } from "@/components/deals/deal-card"
 import { listDeals } from "@/lib/api"
 import { useSSE } from "@/lib/sse"
@@ -37,9 +39,11 @@ export default function DealsPage() {
           ))}
         </div>
       ) : !deals || deals.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          No deals yet. Start by researching a prospect.
-        </div>
+        <EmptyState
+          icon={<BarChart3 className="w-7 h-7 text-muted-foreground" />}
+          title="No deals yet"
+          description="Deals appear here after prospects are researched and qualified by the AI pipeline."
+        />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {deals.map((deal) => (

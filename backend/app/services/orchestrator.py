@@ -167,9 +167,9 @@ async def run_full_pipeline(prospect_id: int, company_name: str):
             raise
 
 
-async def send_approved_outreach(draft_id: int, recipient_email: str | None = None):
+async def send_approved_outreach(draft_id: int, recipient_email: str | None = None, sender_email: str | None = None):
     """Step 4: OutreachPilot — sends the approved email."""
-    print(f"[OutreachPilot] Starting for draft_id={draft_id}, recipient={recipient_email}")
+    print(f"[OutreachPilot] Starting for draft_id={draft_id}, sender={sender_email}, recipient={recipient_email}")
     async with async_session() as session:
         draft = await session.get(OutreachDraft, draft_id)
         if not draft:
@@ -200,14 +200,16 @@ async def send_approved_outreach(draft_id: int, recipient_email: str | None = No
         to_email = recipient_email or "prospect@example.com"
 
         try:
-            outreach_input = json.dumps({
-                "action": "send_email",
-                "to_email": to_email,
-                "subject": draft.subject_line,
-                "body": draft.email_body,
-                "prospect_company": prospect.company_name,
-                "deal_id": deal.id,
-            })
+            # Use natural language instruction — JSON input causes the model to
+            # fabricate tool responses instead of actually calling the Gmail tool
+            from_email = sender_email or settings.SENDER_EMAIL
+            outreach_input = (
+                f"Send an email using the Gmail tool with these details:\n"
+                f"From: {from_email}\n"
+                f"To: {to_email}\n"
+                f"Subject: {draft.subject_line}\n"
+                f"Body:\n{draft.email_body}"
+            )
             print(f"[OutreachPilot] Calling Airia pipeline {settings.OUTREACH_PILOT_PIPELINE_ID}")
             print(f"[OutreachPilot] Input: {outreach_input[:200]}...")
 

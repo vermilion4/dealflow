@@ -77,10 +77,11 @@ async def approve_draft(
 
     # Fire and forget outreach sending (with error logging)
     recipient = body.recipient_email if body and body.recipient_email else None
+    sender = body.sender_email if body and body.sender_email else None
 
     async def _send_with_logging():
         try:
-            await send_approved_outreach(draft.id, recipient_email=recipient)
+            await send_approved_outreach(draft.id, recipient_email=recipient, sender_email=sender)
         except Exception as e:
             import traceback
             print(f"[OutreachPilot] FAILED for draft {draft.id}: {e}")

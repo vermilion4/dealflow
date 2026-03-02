@@ -38,3 +38,8 @@ app.include_router(events.router, prefix="/api")
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "service": "dealflow"}
+
+
+@app.get("/api/config")
+async def get_config():
+    return {"sender_email": settings.SENDER_EMAIL}

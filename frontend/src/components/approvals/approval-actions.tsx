@@ -2,61 +2,71 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useToast } from "@/components/ui/toast"
 
 interface ApprovalActionsProps {
   onApprove: () => Promise<void>
   onReject: () => Promise<void>
   disabled?: boolean
+  companyName?: string
+  requiresEmail?: boolean
 }
 
-export function ApprovalActions({ onApprove, onReject, disabled }: ApprovalActionsProps) {
-  const [confirming, setConfirming] = useState<"approve" | "reject" | null>(null)
-  const [loading, setLoading] = useState(false)
+export function ApprovalActions({ onApprove, onReject, disabled, companyName, requiresEmail }: ApprovalActionsProps) {
+  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | null>(null)
+  const { toast } = useToast()
 
-  async function handleAction(action: "approve" | "reject") {
-    if (confirming !== action) {
-      setConfirming(action)
+  function handleApproveClick() {
+    if (requiresEmail) {
+      toast({
+        title: "Recipient email required",
+        description: "Enter a recipient email address before approving.",
+        variant: "error",
+      })
       return
     }
-    setLoading(true)
-    try {
-      if (action === "approve") await onApprove()
-      else await onReject()
-    } finally {
-      setLoading(false)
-      setConfirming(null)
-    }
+    setConfirmAction("approve")
   }
 
   return (
-    <div className="flex gap-2">
-      <Button
-        onClick={() => handleAction("approve")}
-        disabled={disabled || loading}
-        className={confirming === "approve" ? "bg-green-600 hover:bg-green-700" : ""}
-      >
-        {loading && confirming === "approve"
-          ? "Sending..."
-          : confirming === "approve"
-          ? "Confirm Approve"
-          : "Approve & Send"}
-      </Button>
-      <Button
-        variant="destructive"
-        onClick={() => handleAction("reject")}
-        disabled={disabled || loading}
-      >
-        {loading && confirming === "reject"
-          ? "Rejecting..."
-          : confirming === "reject"
-          ? "Confirm Reject"
-          : "Reject"}
-      </Button>
-      {confirming && (
-        <Button variant="ghost" onClick={() => setConfirming(null)} disabled={loading}>
-          Cancel
+    <>
+      <div className="flex gap-2">
+        <Button
+          onClick={handleApproveClick}
+          disabled={disabled}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          Approve & Send
         </Button>
-      )}
-    </div>
+        <Button
+          variant="destructive"
+          onClick={() => setConfirmAction("reject")}
+          disabled={disabled}
+        >
+          Reject
+        </Button>
+      </div>
+
+      <ConfirmDialog
+        open={confirmAction === "approve"}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+        title="Approve Outreach"
+        description={`This will send the outreach email${companyName ? ` for ${companyName}` : ""}. Are you sure you want to approve and send?`}
+        confirmLabel="Approve & Send"
+        variant="default"
+        onConfirm={onApprove}
+      />
+
+      <ConfirmDialog
+        open={confirmAction === "reject"}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+        title="Reject Draft"
+        description={`This will reject the outreach draft${companyName ? ` for ${companyName}` : ""}. This action cannot be undone.`}
+        confirmLabel="Reject"
+        variant="destructive"
+        onConfirm={onReject}
+      />
+    </>
   )
 }

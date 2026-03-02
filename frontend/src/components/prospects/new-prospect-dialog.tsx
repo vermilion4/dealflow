@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useToast } from "@/components/ui/toast"
 import { createProspect } from "@/lib/api"
 
 interface NewProspectDialogProps {
@@ -15,6 +16,7 @@ interface NewProspectDialogProps {
 export function NewProspectDialog({ open, onOpenChange, onCreated }: NewProspectDialogProps) {
   const [companyName, setCompanyName] = useState("")
   const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,8 +27,12 @@ export function NewProspectDialog({ open, onOpenChange, onCreated }: NewProspect
       setCompanyName("")
       onOpenChange(false)
       onCreated()
-    } catch (err) {
-      console.error("Failed to create prospect:", err)
+    } catch {
+      toast({
+        title: "Failed to start research",
+        description: "Something went wrong. Please try again.",
+        variant: "error",
+      })
     } finally {
       setLoading(false)
     }

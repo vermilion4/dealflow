@@ -46,7 +46,7 @@ export function Sidebar() {
       {/* Mobile hamburger button — rendered outside sidebar so it's always visible */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-3 left-3 z-50 rounded-md border bg-card p-2 md:hidden"
+        className="fixed top-2 left-3 z-50 rounded-md border bg-card p-2 md:hidden cursor-pointer"
         aria-label="Open menu"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -75,7 +75,7 @@ export function Sidebar() {
           {/* Mobile close button */}
           <button
             onClick={() => setOpen(false)}
-            className="rounded-md p-1 hover:bg-accent md:hidden"
+            className="rounded-md p-1 hover:bg-accent md:hidden cursor-pointer"
             aria-label="Close menu"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -92,7 +92,7 @@ export function Sidebar() {
                   router.push(item.href)
                 }}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"

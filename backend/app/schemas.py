@@ -52,6 +52,7 @@ class OutreachDraftResponse(BaseModel):
 class ApprovalAction(BaseModel):
     subject_line: str | None = None
     email_body: str | None = None
+    sender_email: str | None = None
     recipient_email: str | None = None
     comment: str | None = None
 

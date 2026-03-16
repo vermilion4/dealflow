@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
 import { RunTimeline } from "@/components/pipeline/run-timeline"
 import { listPipelineRuns } from "@/lib/api"
+import { groupByDate } from "@/lib/date-groups"
 import { useSSE } from "@/lib/sse"
 import type { PipelineRun } from "@/lib/types"
 
@@ -34,6 +35,8 @@ export default function PipelinePage() {
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
+  const grouped = runs ? groupByDate(runs, (r) => r.started_at) : []
+
   return (
     <div className="space-y-6">
       <div>
@@ -49,80 +52,87 @@ export default function PipelinePage() {
             <Skeleton key={i} className="h-24 w-full" />
           ))}
         </div>
-      ) : !runs || runs.length === 0 ? (
+      ) : grouped.length === 0 ? (
         <EmptyState
           icon={<Workflow className="w-7 h-7 text-muted-foreground" />}
           title="No pipeline runs yet"
           description="Pipeline activity will show up here in real-time as agents process your prospects."
         />
       ) : (
-        <div className="space-y-4">
-          {runs.map((run) => (
-            <Card
-              key={run.id}
-              className="cursor-pointer"
-              onClick={() => setExpandedId(expandedId === run.id ? null : run.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="shrink-0">
-                    <CardTitle className="text-base">
-                      {run.prospect?.company_name || `Run #${run.id}`}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className={statusColors[run.status] || ""}>
-                        {run.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(run.started_at).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                  <RunTimeline run={run} />
-                </div>
-              </CardHeader>
-
-              {expandedId === run.id && run.step_results && (
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(run.step_results).map(([step, result]) => (
-                      <div key={step} className="rounded-lg border p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium capitalize">
-                            {step.replace(/_/g, " ")}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className={
-                              result.status === "completed"
-                                ? "bg-green-100 text-green-700"
-                                : result.status === "failed"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-blue-100 text-blue-700"
-                            }
-                          >
-                            {result.status}
-                          </Badge>
+        <div className="space-y-6">
+          {grouped.map((group) => (
+            <div key={group.label}>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{group.label}</h3>
+              <div className="space-y-4">
+                {group.items.map((run) => (
+                  <Card
+                    key={run.id}
+                    className="cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === run.id ? null : run.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="shrink-0">
+                          <CardTitle className="text-base">
+                            {run.prospect?.company_name || `Run #${run.id}`}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className={statusColors[run.status] || ""}>
+                              {run.status}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(run.started_at).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        {result.timestamp && (
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(result.timestamp).toLocaleString()}
-                          </p>
-                        )}
-                        {result.error && (
-                          <p className="text-sm text-destructive mt-1">{result.error}</p>
-                        )}
-                        {result.output && (
-                          <pre className="text-xs text-muted-foreground mt-2 bg-muted p-2 rounded overflow-auto max-h-32">
-                            {JSON.stringify(result.output, null, 2)}
-                          </pre>
-                        )}
+                        <RunTimeline run={run} />
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
+                    </CardHeader>
+
+                    {expandedId === run.id && run.step_results && (
+                      <CardContent>
+                        <div className="space-y-3">
+                          {Object.entries(run.step_results).map(([step, result]) => (
+                            <div key={step} className="rounded-lg border p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium capitalize">
+                                  {step.replace(/_/g, " ")}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    result.status === "completed"
+                                      ? "bg-green-100 text-green-700"
+                                      : result.status === "failed"
+                                      ? "bg-red-100 text-red-700"
+                                      : "bg-blue-100 text-blue-700"
+                                  }
+                                >
+                                  {result.status}
+                                </Badge>
+                              </div>
+                              {result.timestamp && (
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(result.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                              {result.error && (
+                                <p className="text-sm text-destructive mt-1">{result.error}</p>
+                              )}
+                              {result.output && (
+                                <pre className="text-xs text-muted-foreground mt-2 bg-muted p-2 rounded overflow-auto max-h-32">
+                                  {JSON.stringify(result.output, null, 2)}
+                                </pre>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

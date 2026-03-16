@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ProspectTable } from "@/components/prospects/prospect-table"
 import { NewProspectDialog } from "@/components/prospects/new-prospect-dialog"
 import { listProspects, listDeals } from "@/lib/api"
+import { groupByDate } from "@/lib/date-groups"
 import { useSSE } from "@/lib/sse"
 import type { Prospect, Deal } from "@/lib/types"
 
@@ -30,6 +31,8 @@ export default function ProspectsPage() {
 
   useSSE(handleSSE)
 
+  const grouped = prospects ? groupByDate(prospects, (p) => p.created_at) : []
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -51,8 +54,17 @@ export default function ProspectsPage() {
             <Skeleton key={i} className="h-14 w-full" />
           ))}
         </div>
+      ) : grouped.length === 0 ? (
+        <ProspectTable prospects={[]} deals={[]} />
       ) : (
-        <ProspectTable prospects={prospects || []} deals={deals || []} />
+        <div className="space-y-6">
+          {grouped.map((group) => (
+            <div key={group.label}>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{group.label}</h3>
+              <ProspectTable prospects={group.items} deals={deals || []} />
+            </div>
+          ))}
+        </div>
       )}
 
       <NewProspectDialog

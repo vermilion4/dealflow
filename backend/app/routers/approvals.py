@@ -18,14 +18,16 @@ router = APIRouter(prefix="/approvals", tags=["approvals"])
 
 
 @router.get("/", response_model=list[OutreachDraftResponse])
-async def list_pending_approvals(db: AsyncSession = Depends(get_db)):
-    """List all outreach drafts pending approval."""
-    result = await db.execute(
+async def list_approvals(status: str | None = None, db: AsyncSession = Depends(get_db)):
+    """List outreach drafts, optionally filtered by status."""
+    query = (
         select(OutreachDraft)
         .options(selectinload(OutreachDraft.deal).selectinload(Deal.prospect))
-        .where(OutreachDraft.status == "pending")
         .order_by(OutreachDraft.created_at.desc())
     )
+    if status:
+        query = query.where(OutreachDraft.status == status)
+    result = await db.execute(query)
     return result.scalars().all()
 
 

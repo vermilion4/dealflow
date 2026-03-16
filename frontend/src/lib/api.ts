@@ -41,8 +41,9 @@ export async function getDeal(id: number): Promise<Deal> {
 }
 
 // Approvals
-export async function listPendingApprovals(): Promise<OutreachDraft[]> {
-  return fetchAPI<OutreachDraft[]>("/approvals/")
+export async function listApprovals(status?: string): Promise<OutreachDraft[]> {
+  const query = status ? `?status=${status}` : ""
+  return fetchAPI<OutreachDraft[]>(`/approvals/${query}`)
 }
 
 export async function getDraft(id: number): Promise<OutreachDraft> {

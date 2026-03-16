@@ -200,8 +200,6 @@ async def send_approved_outreach(draft_id: int, recipient_email: str | None = No
         to_email = recipient_email or "prospect@example.com"
 
         try:
-            # Use natural language instruction — JSON input causes the model to
-            # fabricate tool responses instead of actually calling the Gmail tool
             from_email = sender_email or settings.SENDER_EMAIL
             outreach_input = (
                 f"Send an email using the Gmail tool with these details:\n"
